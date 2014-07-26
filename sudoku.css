@@ -1,0 +1,288 @@
+/*
+Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
+*/
+/*
+ * CSS definitions for a helper program for the puzzle generally know as Sudoku.
+ */
+body {
+	background-color: aliceblue; 
+	color: black;
+	font-family: verdana, helvetica, arial, sans-serif; 
+	font-size: 100%; 
+	padding: 0;
+	border-width: 0;
+	margin-bottom: 1.5em;
+	text-align: center;
+}
+
+.set_font {
+	font-family: verdana, helvetica, arial, sans-serif;
+	font-size: 12pt;
+}
+
+.hide {
+	visibility: hidden;
+}
+
+h1 {
+	text-align: center;
+}
+
+.centred_text {
+	text-align: center;
+	vertical-align: middle;
+}
+
+.centred_table {
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+#puzzle {
+	background: steelblue;
+	border-style: solid;
+	border-width: 1px;
+}
+
+#title_section {
+	color: steelblue;
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#controls_section {
+	width: 75%;
+	margin-left: 0;
+	background-color: aliceblue;
+}
+
+#controls_section input {
+	margin-right: 10px; 
+}
+
+#content_section {
+	background-color: aliceblue;
+}
+
+
+#puzzle_section {
+	width: 75%;
+	background-color: aliceblue; 
+}
+
+
+#info_section {
+	margin: 0 auto;
+	font-size: 0.8em; 
+	width: 25%;
+	float: right;
+	color: navy;
+	background-color: powderblue; 
+	overflow: auto;
+	text-align: left; 
+}
+
+
+#info_section h3 {
+	text-align: center;
+}
+
+
+#info_section h4 {
+	text-align: center;
+}
+
+#info_section ol {
+	list-style: circle;
+	margin: 0px;
+	padding: 1.2em;
+}
+
+#legal_section {
+	position: fixed; 
+	bottom: 5px; 
+	right: 5px; 
+	left: 5px; 
+	text-align: center; 
+}
+
+#legal_section span {
+	margin-right: 5px; 
+	margin-left: 5px; 
+	padding-right: 5px; 
+	padding-left: 5px; 
+	text-align: center; 
+	font-size: 0.6em; 
+	background-color: steelblue; 
+	color: aliceblue; 
+}
+
+.dark_glow {
+	-moz-box-shadow:    0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	-webkit-box-shadow: 0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	box-shadow:         0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
+}
+
+.light_glow {
+	-moz-box-shadow:    0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	-webkit-box-shadow: 0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	box-shadow:         0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
+}
+
+.risen_text {
+	margin-top: 2px;
+	padding-bottom: 2px;
+	text-shadow: 	0px 8px 5px rgba(48,48,80,0.1),
+			0px 14px 2px rgba(96,96,160,0.4),
+			0px 20px 10px rgba(80,80,96,0.1), 
+			0px 2px 0px #c0c0a0
+}
+
+.puzzleCell {
+	text-align: center;
+	vertical-align: middle;
+	border-style: solid;
+	border-style: outset;
+	border-width: 1px;
+	background-color: aliceblue;
+	height: 40pt;
+	width: 40pt;
+}
+
+.puzzleBlock {
+	text-align: center;
+	vertical-align: middle;
+	background: black;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.fixed_value {
+	/*table-layout: fixed;*/
+	text-align: center;
+	vertical-align: middle;
+	font-size: 2em;
+	background: steelblue;
+	color: aliceblue;
+	text-shadow:	0px 3px 2px rgba(24,24,208,0.5);
+			
+}
+
+td.possibleCell {
+	margin: 0;
+	border-style: none;
+	font-size: 7pt;
+	height: 9pt;
+	width: 9pt;
+	vertical-align: middle;
+	text-align: center;
+}
+
+td.possible {
+	color: navy;
+}
+
+td.single {
+	background-color:navy;
+	color: aliceblue;
+}
+
+td.rowpin {
+	background-color: green;
+}
+
+td.columnpin {
+	background-color: olive;
+}
+
+td.rblockpin {
+	background-color: green;
+}
+
+td.cblockpin {
+	background-color: olive;
+}
+
+td.rblockpin,td.cblockpin {
+	color: white;
+}
+
+td.cblockpin.rblockpin {
+	background-color: red;
+	/*color: red;*/
+}
+
+td.blockgroup {
+	background-color: yellow;
+}
+
+td.rowgroup {
+	background-color: lime;
+}
+
+td.columngroup {
+	background-color: maroon;
+}
+
+td.blockgroup.rowgroup {
+	background-color: darkgray;
+}
+
+td.blockgroup.columngroup {
+	background-color: orange;
+}
+
+td.columngroup.rowgroup {
+	background-color: saddlebrown;
+}
+
+td.ignored {
+	color: steelblue;
+}
+
+td.group1 {
+	color: rgb(196,0,0);
+}
+
+td.columngroup.group1 {
+	color: white;
+}
+
+td.group0 {
+	color: rgb(0,0,0);
+}
+
+td.group2 {
+	color: rgb(0,196,0);
+}
+
+td.group3 {
+	color: rgb(0,0,196);
+}
+
+td.group4 {
+	color: rgb(196,0,196);
+}
+
+td.group5 {
+	color: rgb(196,196,0);
+}
+
+td.group6 {
+	color: rgb(0,196,196);
+}
+
+td.possible:hover {
+	background: steelblue;
+	cursor: pointer;
+}
+
+td.single:hover {
+	background: steelblue;
+	cursor: pointer;
+}
+
+
