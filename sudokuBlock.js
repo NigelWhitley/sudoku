@@ -16,11 +16,11 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		// solution evaluation.
 		// Although normally we want to separate form from function, I have combined 
 		// them in this object. My justification is that the logical (function) aspect
-		// is essentially an expression of the visual layout, so any fundamental change
+		// is essentially an expression of the visual layout: any fundamental change
 		// to the display side would have a major effect on the logical processing 
-		// thereby voiding the major reason for keeping them separate.
+		// hence voiding the major reason for keeping them separate.
 		// Further, the display processing is primarily in the setup after which the 
-		// visual changes are at cell rather than block level. Therefore, the display 
+		// visual changes are at cell rather than block level. The display 
 		// processing can be isolated within the object to just the init() function.
 
 		//this.puzzle = puzzle;
@@ -98,14 +98,27 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			}
 		}
 
-		sudokuBlock.prototype.excludePossibleValueForCell = function ( value, cellPosition ) {
-			this.getCell(cellPosition).excludePossibleValue( value );
+		sudokuBlock.prototype.showCells = function () {
+			for (var row = sudokuStatic.firstCellRow; row <=sudokuStatic.lastCellRow; row++) {
+				for (var column = sudokuStatic.firstCellColumn; column <=sudokuStatic.lastCellColumn; column++) {
+					let cell = this.getCell(new Position(row, column));
+					cell.showCell();
+				}
+			}
 		}
 
 		sudokuBlock.prototype.resetPossibleValues = function ( ) {
 			for (var cellRow=sudokuStatic.firstCellRow; cellRow <= sudokuStatic.lastCellRow; cellRow++) {
 				for (var cellColumn=sudokuStatic.firstCellColumn; cellColumn <= sudokuStatic.lastCellColumn; cellColumn++) {
 					this.getCell(new Position(cellRow, cellColumn)).resetPossibleValues();
+				}
+			}
+		}
+
+		sudokuBlock.prototype.clear = function ( ) {
+			for (var cellRow=sudokuStatic.firstCellRow; cellRow <= sudokuStatic.lastCellRow; cellRow++) {
+				for (var cellColumn=sudokuStatic.firstCellColumn; cellColumn <= sudokuStatic.lastCellColumn; cellColumn++) {
+					this.getCell(new Position(cellRow, cellColumn)).clear();
 				}
 			}
 		}

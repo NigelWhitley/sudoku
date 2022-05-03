@@ -1,12 +1,12 @@
 /*
-Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
+Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2020
 */
 /*
  * CSS definitions for a helper program for the puzzle generally know as Sudoku.
  */
 body {
-	background-color: aliceblue; 
-	color: black;
+	background-color: whitesmoke; 
+	color: whitesmoke;
 	font-family: verdana, helvetica, arial, sans-serif; 
 	font-size: 100%; 
 	padding: 0;
@@ -40,54 +40,87 @@ h1 {
 	margin-bottom: auto;
 }
 
+
 #puzzle {
-	background: steelblue;
+	background: darkslategray;
 	border-style: solid;
 	border-width: 1px;
 }
 
+
 #title_section {
-	color: steelblue;
-	width: 80%;
+	color: gold;
 	margin-left: auto;
 	margin-right: auto;
 }
 
+
 #controls_section {
 	width: 75%;
-	margin-left: 0;
-	background-color: aliceblue;
+	background-color: whitesmoke;
+	margin-bottom: 2px;
 }
+
 
 #controls_section input {
 	margin-right: 10px; 
 }
 
+
 #content_section {
-	background-color: aliceblue;
+	background-color: whitesmoke;
+	display: inline;
+	margin:auto;
+}
+
+
+#files_section {
+	position: absolute;
+	background-color: whitesmoke;
+	display: inline-block;
+	margin: 0 auto;
+	border-width: 0;
+}
+
+
+label,button-label {
+	background-color: silver;
+	display: inline-block;
+	color: darkslategray;
+	border-width: 1px solid dimgray;
+}
+
+
+input#file-selector {
+	display: none;
 }
 
 
 #puzzle_section {
-	width: 75%;
-	background-color: aliceblue; 
+	background-color: whitesmoke;
+	display: inline-block;
+	margin: 0 auto;
+	border-width: 0;
 }
 
 
 #info_section {
 	margin: 0 auto;
 	font-size: 0.8em; 
-	width: 25%;
-	float: right;
-	color: navy;
-	background-color: powderblue; 
+    padding: 0 0.8em;
+	color: darkslategray;
+	background-color: lightgray; 
 	overflow: auto;
 	text-align: left; 
+	display: inline-block;
+	width: 25%;
+	border: 1px solid dimgray;
 }
 
 
 #info_section h3 {
 	text-align: center;
+	color: goldenrod;
 }
 
 
@@ -101,12 +134,20 @@ h1 {
 	padding: 1.2em;
 }
 
+#info_section a {
+	color:goldenrod;
+}
+
+#info_section h4 a {
+	color: darkslategray;
+}
+
 #legal_section {
 	position: fixed; 
-	bottom: 5px; 
+	bottom: 10px; 
 	right: 5px; 
 	left: 5px; 
-	text-align: center; 
+	text-align: center;
 }
 
 #legal_section span {
@@ -116,38 +157,63 @@ h1 {
 	padding-left: 5px; 
 	text-align: center; 
 	font-size: 0.6em; 
-	background-color: steelblue; 
-	color: aliceblue; 
+	background-color: whitesmoke; 
+	color: black; 
 }
 
 .dark_glow {
-	-moz-box-shadow:    0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
-	-webkit-box-shadow: 0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
-	box-shadow:         0px 0px 2px 1px blue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	-moz-box-shadow:    0px 0px 2px 1px goldenrod,0px 0px 5px 4px rgba(40,30,10,0.7);
+	-webkit-box-shadow: 0px 0px 2px 1px goldenrod,0px 0px 5px 4px rgba(40,30,10,0.7);
+	box-shadow:         0px 0px 2px 1px goldenrod,0px 0px 5px 4px rgba(40,30,10,0.7);
 }
 
 .light_glow {
-	-moz-box-shadow:    0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
-	-webkit-box-shadow: 0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
-	box-shadow:         0px 0px 2px 1px powderblue,0px 0px 5px 4px rgba(0,0,0,0.7);
+	-moz-box-shadow:    0px 0px 2px 1px slategray,0px 0px 5px 4px rgba(0,0,0,0.7);
+	-webkit-box-shadow: 0px 0px 2px 1px slategray,0px 0px 5px 4px rgba(0,0,0,0.7);
+	box-shadow:         0px 0px 2px 1px slategray,0px 0px 5px 4px rgba(0,0,0,0.7);
+}
+
+#legal_section .light_glow {
+	opacity: 0.5;
+	border: 1px solid slategray;
+	padding: 5px;
+	-moz-box-shadow:    0px 0px 5px 4px rgba(32,32,32,0.5);
+	-webkit-box-shadow: 0px 0px 5px 4px rgba(32,32,32,0.5);
+	box-shadow:         0px 0px 5px 4px rgba(32,32,32,0.5);
 }
 
 .risen_text {
 	margin-top: 2px;
 	padding-bottom: 2px;
-	text-shadow: 	0px 8px 5px rgba(48,48,80,0.1),
-			0px 14px 2px rgba(96,96,160,0.4),
-			0px 20px 10px rgba(80,80,96,0.1), 
-			0px 2px 0px #c0c0a0
+	text-shadow: 	0px -8px 5px rgba(128,97,0,0.5),
+			/* 0px 14px 2px rgba(180,96,0,0.3), */
+			/* 0px 20px 10px rgba(150,80,0,0.1), */
+			0px -3px 0px #808060;
 }
+
+
+#puzzle {
+	-moz-box-shadow:    -3px 6px 2px lightslategray;
+	-webkit-box-shadow: -3px 6px 2px lightslategray;
+	box-shadow:         -3px 6px 2px lightslategray;
+	/* padding-bottom: 4px; */
+}
+
+
+#info_section {
+	-moz-box-shadow:    3px 6px 2px lightslategray;
+	-webkit-box-shadow: 3px 6px 2px lightslategray;
+	box-shadow:         3px 6px 2px lightslategray;
+	/* padding-bottom: 4px; */
+}
+
 
 .puzzleCell {
 	text-align: center;
 	vertical-align: middle;
 	border-style: solid;
-	border-style: outset;
 	border-width: 1px;
-	background-color: aliceblue;
+	background-color: linen;
 	height: 40pt;
 	width: 40pt;
 }
@@ -155,7 +221,7 @@ h1 {
 .puzzleBlock {
 	text-align: center;
 	vertical-align: middle;
-	background: black;
+	background: smokewhite;
 	border-style: solid;
 	border-width: 1px;
 }
@@ -165,9 +231,9 @@ h1 {
 	text-align: center;
 	vertical-align: middle;
 	font-size: 2em;
-	background: steelblue;
-	color: aliceblue;
-	text-shadow:	0px 3px 2px rgba(24,24,208,0.5);
+	background: dimGray;
+	color: white;
+	text-shadow:	0px 3px 2px rgba(24,24,24,0.5);
 			
 }
 
@@ -182,12 +248,12 @@ td.possibleCell {
 }
 
 td.possible {
-	color: navy;
+	color: darkSlateGray;
 }
 
-td.single {
-	background-color:navy;
-	color: aliceblue;
+td.single, .single {
+	color: black;
+    border: black 1px solid;
 }
 
 td.rowpin {
@@ -199,11 +265,11 @@ td.columnpin {
 }
 
 td.rblockpin {
-	background-color: green;
+	background-color: seagreen;
 }
 
 td.cblockpin {
-	background-color: olive;
+	background-color: olivedrab;
 }
 
 td.rblockpin,td.cblockpin {
@@ -224,11 +290,11 @@ td.rowgroup {
 }
 
 td.columngroup {
-	background-color: maroon;
+	background-color: orangered;
 }
 
 td.blockgroup.rowgroup {
-	background-color: darkgray;
+	background-color: lightsalmon;
 }
 
 td.blockgroup.columngroup {
@@ -239,8 +305,8 @@ td.columngroup.rowgroup {
 	background-color: saddlebrown;
 }
 
-td.ignored {
-	color: steelblue;
+td.impossible {
+	color: dimgray;
 }
 
 td.group1 {
@@ -276,12 +342,18 @@ td.group6 {
 }
 
 td.possible:hover {
-	background: steelblue;
+	background-color: darkGray;
 	cursor: pointer;
 }
 
 td.single:hover {
-	background: steelblue;
+	background-color: goldenrod;
+	cursor: pointer;
+}
+
+td.impossible:hover {
+	color: slateGray;
+	background-color: lightgray;
 	cursor: pointer;
 }
 

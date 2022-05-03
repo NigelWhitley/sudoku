@@ -94,6 +94,7 @@ and a value associated with it.
 		}
 	}
 
+
 	function PuzzleValue(aPuzzlePosition, aValue)
 	// Set a value in a Sudoku cell
 	{

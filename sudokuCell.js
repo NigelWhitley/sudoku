@@ -17,13 +17,19 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		//this.puzzle = this.block.puzzle;
 		this.cellElement = parentElement;
 		this.position = cellPosition;
+        this.excludedValues = new Array();
 
 		sudokuCell.prototype.init = function () {
 			this.blockPosition = this.block.position;
 			this.possibleValues = createArray(sudokuStatic.maxValue);
 			this.possibleState = createArray(sudokuStatic.maxValue);
-			this.clearValue();
+			this.clear();
 			this.showCell();
+		}
+
+		sudokuCell.prototype.clear = function () {
+            this.clearExcludedValues();
+			this.clearValue();
 		}
 
 		sudokuCell.prototype.clearValue = function ()
@@ -33,12 +39,25 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			this.resetPossibleValues();
 		}
 
+		sudokuCell.prototype.clearExcludedValues = function ()
+		// Clear the excluded values in a square
+		{
+			this.excludedValues = createArray(0);
+		}
+
+
 		sudokuCell.prototype.resetPossibleValues = function () {
 			if ( ! this.isFixedValue() ) {
-				this.possibleCount = sudokuStatic.maxValue;
+				this.possibleCount = 0;
 				for ( var possible_index=1; possible_index <= sudokuStatic.maxValue; possible_index++) {
 					this.possibleValues[possible_index] = possible_index;
-					this.possibleState[possible_index] = "possible";
+                    // Excluded values are not possible
+                    if (this.excludedValues.includes(possible_index)) {
+                        this.possibleState[possible_index] = "excluded";
+                    } else {                      
+                        this.possibleState[possible_index] = "possible";
+                        this.possibleCount++;
+                    }
 				}
 			}
 		}
@@ -48,30 +67,45 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		}
 
 		sudokuCell.prototype.isValuePossible = function ( value ) {
-			return ( ( ! this.isPossibleExcluded(value) ) && ( ! this.isPossibleIgnored(value) ) );
+			return ( ( ! this.isValueExcluded(value) ) && ( ! this.isValueIgnored(value) ) );
 		}
 
-		sudokuCell.prototype.isPossibleExcluded = function (value) {
+		sudokuCell.prototype.isValueExcluded = function (value) {
 			return ( this.possibleState[value] === "excluded" );
 		}
 
-		sudokuCell.prototype.isPossibleIgnored = function (value) {
-			return ( this.possibleState[value] === "ignored" );
+		sudokuCell.prototype.isValueIgnored = function (value) {
+			return ( this.possibleState[value] === "impossible" );
 		}
 
 		sudokuCell.prototype.valueNotPossible = function (value) {
 			return ( ! this.isValuePossible(value) );
 		}
 
+
 		sudokuCell.prototype.excludePossibleValue = function ( value ) {
 			var stateChanged = false;
-			if (! this.isPossibleExcluded(value)) {
+			if (! this.isValueExcluded(value)) {
 				this.possibleState[value] = "excluded";
 				this.possibleCount--;
 				stateChanged = true;
 			}
 			return stateChanged;
 		}
+
+
+		sudokuCell.prototype.undoExcludePossibleValue = function ( value ) {
+			var stateChanged = false;
+            findValue = this.excludedValues.indexOf(value);
+            this.excludedValues.splice(findValue, 1);
+			if (this.isValueExcluded(value)) {
+				this.possibleState[value] = "possible";
+				this.possibleCount++;
+				stateChanged = true;
+			}
+			return stateChanged;
+		}
+
 
 		// Need to have a state which indicates the value would be excluded
 		// if the group or pin processing were set to filter rather than show. 
@@ -80,19 +114,21 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		sudokuCell.prototype.ignorePossibleValue = function ( value ) {
 			var stateChanged = false;
 			if ( this.isValuePossible(value) ) {
-				this.possibleState[value] = "ignored";
+				this.possibleState[value] = "impossible";
 				stateChanged = true;
 			}
 			return stateChanged;
 		}
 
+
 		sudokuCell.prototype.onlyPossibleValue = function ( value ) {
 			this.possibleState[value] = "single";
 		}
 
+
 		sudokuCell.prototype.setStateForPossibleValue = function ( state, value ) {
 			var stateChanged = false;
-			if (! this.isPossibleExcluded(value)) {
+			if (! this.isValueExcluded(value)) {
 				if ( this.possibleState[value] !== state ) {
 					this.possibleState[value] = state;
 					stateChanged = true;
@@ -100,6 +136,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			}
 			return stateChanged;
 		}
+
 
 		sudokuCell.prototype.addStateForPossibleValue = function ( state, value ) {
 			if ( this.isValuePossible(value) ) {
@@ -109,17 +146,68 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			}
 		}
 
-		sudokuCell.prototype.fixValue = function (element, event)
+
+		// Fix the supplied value as the final value for that cell
+		// We sanity check that it is not an impossible value i.e. it has not been marked as such by the "filter" aid options
+		sudokuCell.prototype.clickPossibleValue = function (element, event)
 		// Fix a value in a square
 		{
+			//console.log("Clicked possible value");
+            var is_impossible = $(element).hasClass("impossible");
+            if (!is_impossible) {
+                var table_cell=element.parentNode.parentNode.parentNode;
+                var cell_name = table_cell.name;
+                var row = cell_name.substr( 4, 1);
+                var column = cell_name.substr( 6, 1);
+
+                var clicked_text=element.childNodes[0].nodeValue;
+                var clickedValue = parseInt(clicked_text.valueOf());
+                var clickedPosition = new PuzzlePosition(this.blockPosition, this.position);
+                sudokuGlobal.puzzle.fixValue(clickedValue, clickedPosition);
+
+                // Record the change so we can undo it
+				sudokuGlobal.controls.storeUndo("FixValue", {value: clickedValue, position: clickedPosition});
+            }
+
+		}
+
+
+		// Fix the supplied value as the final value for that cell
+		// We sanity check that it is not an impossible value i.e. it has not been marked as such by the "filter" aid options
+		sudokuCell.prototype.fixValue = function (value)
+		// Fix a value in a square
+		{
+                this.currentValue = value;
+		}
+
+
+        // Used for manually removing a posssible value. It will add the value to a list of excluded values for the cell.
+		sudokuCell.prototype.contextPossibleValue = function (element, event)
+		// Remove a possible value in a square
+		{
+            //console.log("Removing from cell");
 			var table_cell=element.parentNode.parentNode.parentNode;
 			var cell_name = table_cell.name;
 			var row = cell_name.substr( 4, 1);
 			var column = cell_name.substr( 6, 1);
+            console.log("row "+row+", column "+column);
 
 			var clicked_text=element.childNodes[0].nodeValue;
-			this.currentValue = parseInt(clicked_text.valueOf());
-			sudokuGlobal.puzzle.fixValue(clicked_text.valueOf(), new PuzzlePosition(this.blockPosition, this.position));
+            //console.log("excluding value "+clicked_text);
+			var contextValue = parseInt(clicked_text.valueOf());
+			var contextPosition = new PuzzlePosition(this.blockPosition, this.position);
+			sudokuGlobal.puzzle.removeValue(parseInt(contextValue), contextPosition);
+			sudokuGlobal.controls.storeUndo("RemoveValue", {value: contextValue, position: contextPosition});
+            event.preventDefault();
+
+		}
+
+        // Used for manually removing a posssible value. It will add the value to a list of excluded values for the cell.
+		sudokuCell.prototype.removeValue = function (value)
+		// Remove a possible value in a square
+		{
+            //console.log("excluding value "+clicked_text);
+			this.excludedValues.push(value);
 
 		}
 
@@ -144,6 +232,10 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 
 		}
 
+		// Display the cell.
+		// If it has a fixed value we display that value only (with a suitable class).
+		// Otherwise we display the possible values in a table, with classes set to indicate how it is to be displayed.
+		// For example, a value may be marked as "excluded" or be part of a group.
 		sudokuCell.prototype.showCell = function () {
 			remove_children(this.cellElement);
 			this.cellElement.className = "puzzleCell centred_text";
@@ -165,17 +257,25 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 					for ( var eachColumn=sudokuStatic.firstPossColumn; eachColumn <= sudokuStatic.lastPossColumn; eachColumn++) {
 						var possibleDetail=document.createElement("TD");
 						possibleRow.appendChild(possibleDetail);
-						if ( this.isPossibleExcluded(possibleValue) ) {
+						if ( this.isValueExcluded(possibleValue) ) {
 							possibleDetail.className="possibleCell";
 						} else {
 							possibleDetail.className="possibleCell " + this.possibleState[possibleValue];
 							var possibleText = document.createTextNode(possibleValue);
 							possibleDetail.appendChild(possibleText);
-							var that = this; 
-							var loadfunc=function(e) {
-								that.fixValue(this, e); // pass-through the event object
+							var that = this;
+                            
+                            // Left click - fix value
+							var clickfunc=function(e) {
+								that.clickPossibleValue(this, e); // pass-through the event object
 							}; 
-							addEvent(possibleDetail, "click", loadfunc, false);
+							addEvent(possibleDetail, "click", clickfunc, false);
+                            
+                            // Right click - remove possible value
+							var contextfunc=function(e) {
+								that.contextPossibleValue(this, e); // pass-through the event object
+							}; 
+							addEvent(possibleDetail, "contextmenu", contextfunc, false);
 						}
 						possibleValue++;
 					}

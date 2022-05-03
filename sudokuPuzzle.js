@@ -26,12 +26,9 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 
 	function sudokuPuzzle() {
 
-		this.blocks = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastBlockColumn);
-		this.currentValues = new Array(sudokuStatic.maxValue);
-		this.possibleValues = new Array();
 
 		sudokuPuzzle.prototype.getBlock = function (blockPosition) {
-			return this.blocks[blockPosition.row][blockPosition.column];
+			return sudokuGlobal.blocks[blockPosition.row][blockPosition.column];
 		}
 
 		sudokuPuzzle.prototype.getCell = function (puzzlePosition) {
@@ -91,6 +88,33 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			return this.getBlockCells(puzzlePosition.block);
 		}
 
+		sudokuPuzzle.prototype.getBlocks = function () {
+			let allBlocks = new Array();
+			for( var row=sudokuStatic.firstBlockRow; row <= sudokuStatic.lastBlockRow; row++) {
+
+				for (var column=sudokuStatic.firstBlockColumn; column <= sudokuStatic.lastBlockColumn; column++) {
+					var block = this.getBlock(new Position(row, column));
+					allBlocks.push(block);
+				}
+			}
+			return allBlocks;
+		}
+
+		sudokuPuzzle.prototype.clearFixedValues = function () {
+			this.fixedValuesInRow = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastCellRow, sudokuStatic.maxValue);
+			this.fixedValuesInColumn = createArray(sudokuStatic.lastBlockColumn, sudokuStatic.lastCellColumn, sudokuStatic.maxValue);
+			this.fixedValuesInBlock = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastBlockColumn, sudokuStatic.maxValue);
+		}
+
+		// Clear the puzzle of all values
+		sudokuPuzzle.prototype.clear = function () {
+			this.clearFixedValues();
+			let allBlocks = this.getBlocks();
+			for ( var blockIndex = 0; blockIndex < allBlocks.length; blockIndex++ ) {
+				allBlocks[blockIndex].clear();
+			}
+		}
+
 		sudokuPuzzle.prototype.init = function () {
 			this.controls = sudokuGlobal.controlsSection;
 			// Remove the "fallback" text from the puzzle section 
@@ -99,7 +123,8 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// This could be done with nested divs, but the layout of the puzzle is
 			// integral to the design of the code so form and function 
 			// are far more intertwined than most applications.
-			sudokuGlobal.puzzleSection.className = "centred_text";
+			sudokuGlobal.puzzleSection.className = "";
+			//sudokuGlobal.puzzleSection.className = "centred_text";
 			sudokuGlobal.puzzleTable = document.createElement("TABLE");
 			sudokuGlobal.puzzleTable.id = "puzzle";
 			sudokuGlobal.puzzleTable.className = "centred_table set_font";
@@ -113,16 +138,14 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 
 					var blockPosition = new Position(row, column);
 					var block = new sudokuBlock(currentBlock, blockPosition);
-					this.blocks[row][column] = block;
+					sudokuGlobal.blocks[row][column] = block;
 					blockRow.appendChild(currentBlock);
 				}
 				sudokuGlobal.puzzleTable.appendChild(blockRow);
 			}
 			sudokuGlobal.puzzleSection.appendChild(sudokuGlobal.puzzleTable);
 			//var block=this.getBlock(new Position(sudokuStatic.firstBlockRow, sudokuStatic.firstBlockColumn));
-			this.fixedValuesInRow = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastCellRow, sudokuStatic.maxValue);
-			this.fixedValuesInColumn = createArray(sudokuStatic.lastBlockColumn, sudokuStatic.lastCellColumn, sudokuStatic.maxValue);
-			this.fixedValuesInBlock = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastBlockColumn, sudokuStatic.maxValue);
+			this.clearFixedValues();
 		}
 
 		sudokuPuzzle.prototype.displayPuzzle = function ( ) {
@@ -144,33 +167,49 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			} else if (aidLevel == "showgrp") {
 				sudokuGlobal.puzzle.showGroups();
 			} else if (aidLevel == "filgrp") {
-				sudokuGlobal.puzzle.filterGroups();
+				sudokuGlobal.puzzle.excludeGroups();
 			}
 			sudokuGlobal.puzzle.showCells();
 		}
 
 		sudokuPuzzle.prototype.undo = function (undoAction, undoData) {
-		// Undo the recorded action. Only partly implemented.
+		// Undo the recorded action. 
 			if (undoAction == "FixValue") {
 				this.undoFixValue(undoData);
+            } else if (undoAction == "RemoveValue") {
+				this.undoRemoveValue(undoData);
 			} else if (undoAction == "SetAidLevel") {
-				sudokuGlobal.aidLevel.selectedIndex = undoData;
+				sudokuGlobal.aidLevel.selectedIndex = undoData.previous;
+				sudokuGlobal.controls.aidLevelChanged();
+			}
+		}
+
+		sudokuPuzzle.prototype.redo = function (redoAction, redoData) {
+		// Redo the recorded action. 
+			if (redoAction == "FixValue") {
+				this.fixValue(redoData.value, redoData.position);
+				sudokuGlobal.controls.showUndoRedo();
+            } else if (redoAction == "RemoveValue") {
+				this.removeValue(redoData.value, redoData.position);
+			} else if (redoAction == "SetAidLevel") {
+				sudokuGlobal.aidLevel.selectedIndex = redoData.current;
 				sudokuGlobal.controls.aidLevelChanged();
 			}
 		}
 
 		sudokuPuzzle.prototype.undoFixValue = function (undoData) {
 		// Cancel the fixing of a value in a cell and redisplay the possible values
-			var undoPosition = undoData;
+			var undoValue = undoData.value;
+			var undoPosition = undoData.position;
 			var blockRow = undoPosition.block.row;
 			var blockColumn = undoPosition.block.column;
 			var cellRow = undoPosition.cell.row;
 			var cellColumn = undoPosition.cell.column;
 
 			var undoCell = this.getCell(undoPosition);
-			var undoValue = undoCell.currentValue;
 
 			undoCell.currentValue = 0;
+
 			this.removeFixedValueInRow (undoValue, undoPosition);
 			this.removeFixedValueInColumn (undoValue, undoPosition);
 			this.removeFixedValueInBlock (undoValue, undoPosition);
@@ -188,17 +227,53 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// It then identifies any unique values for each cell from the new 
 			// set of possible values in the puzzle. If there are no unique values 
 			// it looks for "pins".
-			// Next it records the fixed value in the "Undo" stack.
+			// Next it records the fixed value in the cell.
 			// Finally it shows the puzzle in its new condition.
 			this.addFixedValueInRow (valueToFix, puzzlePosition);
 			this.addFixedValueInColumn (valueToFix, puzzlePosition);
 			this.addFixedValueInBlock (valueToFix, puzzlePosition);
-			//debugFramework.showMessage("Fixed value arr " + this.fixedValuesInColumn[puzzlePosition.block.column][puzzlePosition.cell.column]);
 
-			sudokuGlobal.controls.storeUndo("FixValue", puzzlePosition);
+			this.getCell(puzzlePosition).fixValue(valueToFix);
+
+			//debugFramework.showMessage("Fixed value arr " + this.fixedValuesInColumn[puzzlePosition.block.column][puzzlePosition.cell.column]);
 
 			this.provideAid();
 			return false;
+		}
+
+        // Remove possible Value
+		sudokuPuzzle.prototype.removeValue = function (valueToRemove, puzzlePosition) {
+			// Remove a value in a cell
+			// We can manually remove possible values from a cell
+            // Typically this happens when spotting pins or groups 
+			// It then identifies any unique values for each cell from the new 
+			// set of possible values in the puzzle. If there are no unique values 
+			// it looks for "pins".
+			// Next it records the removed value in the "Undo" stack.
+			// Finally it shows the puzzle in its new condition.
+            console.log("Removing in puzzle");
+			this.getCell(puzzlePosition).removeValue(valueToRemove);
+    		this.excludePossibleValueForCell( valueToRemove, puzzlePosition );
+			//debugFramework.showMessage("Fixed value arr " + this.fixedValuesInColumn[puzzlePosition.block.column][puzzlePosition.cell.column]);
+
+			this.provideAid();
+			return false;
+		}
+
+		sudokuPuzzle.prototype.undoRemoveValue = function (undoData) {
+		// Cancel the fixing of a value in a cell and redisplay the possible values
+			var undoPosition = undoData.position;
+			var undoValue = undoData.value;
+			var blockRow = undoPosition.block.row;
+			var blockColumn = undoPosition.block.column;
+			var cellRow = undoPosition.cell.row;
+			var cellColumn = undoPosition.cell.column;
+
+			var undoCell = this.getCell(undoPosition);
+
+			undoCell.undoExcludePossibleValue(undoValue);
+
+			this.provideAid();
 		}
 
 		sudokuPuzzle.prototype.showBasic = function () {
@@ -216,11 +291,12 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// It then flags any such value found. 
 			this.buildPossibleValues();
 			this.hintsFound = this.checkForSingles();
+            // If no singles were found, check for groups
 			if ( ! this.hintsFound ) {
-				//debugFramework.showMessage("showAuto");
-				//this.hintsFound = this.checkForPins("show");
+                // Only show which values would be excluded because of groups, don't remove them
 				this.hintsFound = this.checkForGroups("show");
 			}
+			//console.log("shown auto");
 			return false;
 		}
 
@@ -229,7 +305,8 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// and row or column. For more information see checkForPins.
 			// It then flags any such value found. 
 			this.buildPossibleValues();
-			this.hintsFound = this.checkForGroups("exclude");
+			this.hintsFound = this.checkForPins("show");
+			this.hintsFound = this.checkForGroups("exclude") || this.hintsFound;
 			this.hintsFound = this.checkForPins("show") || this.hintsFound;
 			this.hintsFound = this.checkForSingles() || this.hintsFound;
 			return false;
@@ -240,8 +317,12 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// and row or column. For more information see checkForPins. 
 			// It then flags any such value found and excludes the flagged
 			// values from the intersecting block, row or column.
+            
+            // Because this is always used in conjunction with exclude groups we run the Pins processing both before and afterward.
+            // This is because the two will interact so Pins can reveal Groups and vice versa but I'm not iterating exhaustively.
 			this.buildPossibleValues();
-			this.hintsFound = this.checkForGroups("exclude");
+			this.hintsFound = this.checkForPins("exclude");
+			this.hintsFound = this.checkForGroups("exclude") || this.hintsFound;
 			this.hintsFound = this.checkForPins("exclude") || this.hintsFound;
 			this.hintsFound = this.checkForSingles() || this.hintsFound;
 			return false;
@@ -258,7 +339,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			return false;
 		}
 
-		sudokuPuzzle.prototype.filterGroups = function () {
+		sudokuPuzzle.prototype.excludeGroups = function () {
 			// This level checks cells for useful intersections between block 
 			// and row or column. For more information see checkForPins. 
 			// It then flags any such value found and excludes the flagged
@@ -359,7 +440,11 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		}
 
 		sudokuPuzzle.prototype.excludePossibleValueForCell = function ( value, puzzlePosition ) {
-			this.getBlock(puzzlePosition.block).excludePossibleValueForCell( value, puzzlePosition.cell);
+			this.getBlock(puzzlePosition.block).getCell(puzzlePosition.cell).excludePossibleValue( value );
+		}
+
+		sudokuPuzzle.prototype.undoExcludePossibleValueForCell = function ( value, puzzlePosition ) {
+			this.getBlock(puzzlePosition.block).getCell(puzzlePosition.cell).undoExcludePossibleValue( value );
 		}
 
 		sudokuPuzzle.prototype.resetPossibleValues = function ( ) {
@@ -513,7 +598,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			// The same logic applies vice versa ie values from a block pinning that row,
 			// and for the interaction between blocks and columns. 
 			// Note that the only possible such interaction between row and column implies a single value.
-			this.stateChanged = false;
+			//this.stateChanged = false;
 			var pinningValuesFound = this.checkForPinsFromBlock(pinAction);
 			pinningValuesFound = this.checkForPinsFromRow(pinAction) || pinningValuesFound;
 			pinningValuesFound = this.checkForPinsFromColumn(pinAction) || pinningValuesFound;
@@ -629,7 +714,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			if ( pinnedAction === "exclude" ) {
 				pinnedState = "excluded";
 			} else {
-				pinnedState = "ignored";
+				pinnedState = "impossible";
 			}
 
 			for (var pinningIndex=0; pinningIndex < pinningValues.length; pinningIndex++) {
@@ -689,7 +774,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			if ( pinnedAction === "exclude" ) {
 				pinnedState = "excluded";
 			} else {
-				pinnedState = "ignored";
+				pinnedState = "impossible";
 			}
 
 			for (var pinningIndex=0; pinningIndex < pinningValues.length; pinningIndex++) {
@@ -730,7 +815,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 			if ( pinnedAction === "exclude" ) {
 				pinnedState = "excluded";
 			} else {
-				pinnedState = "ignored";
+				pinnedState = "impossible";
 			}
 
 			for (var pinningIndex=0; pinningIndex < pinningValues.length; pinningIndex++) {
@@ -757,20 +842,13 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		}
 
 		sudokuPuzzle.prototype.checkForGroups = function (groupAction) {
-			// Blocks and rows intersect across several cells, as do blocks and columns.
-			// Where that intersection contains all possible values according to one 
-			// rule or limitation, it therefore contains all possible values according
-			// to the limitation on the intersecting block, row, or column.
-			// I refer to this behaviour as "pinning".
-			// For example, if all values in a row for the value "2" are in the same block,
-			// we know that any values of "2" elsewhere in that block can be ignored. 
-			// The same logic applies vice versa ie values from a block pinning that row,
-			// and for the interaction between blocks and columns. 
-			// Note that the only possible such interaction between row and column implies a single value.
-			//var groups = this.checkForGroupsByColumn(groupAction);
-			//var groups = this.checkForGroupsByBlock(groupAction);
+			// For our purposes a "group" refers to a subset of possible values and positions within a unit 
+            // (block, row or column). The number of values must match the number of positions within the group 
+            // and that number must be fewer then the number of values still to be solved within that unit. So a
+            // group of three would be formed within a unit with seven unsolved positions if there were three
+            // positions which could only contain any of three values. 
 			//debugFramework.showMessage("checkForGroups by row", "append");
-			this.stateChanged = false;
+			//this.stateChanged = false;
 			var groups = this.checkForGroupsByRow(groupAction);
 			//debugFramework.showMessage("checkForGroups by column", "append");
 			groups = groups.concat( this.checkForGroupsByColumn(groupAction) );
@@ -787,8 +865,8 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 		// matches the number of values.
 		sudokuPuzzle.prototype.checkForGroupsByUnit = function ( unitCellPositions, groupState, groupsAction ) {
 			//debugFramework.showMessage("checkForGroups by unit", "append");
-			var possibleCellPositions = sudokuCellSet.withoutFixedValues( unitCellPositions );
-			var cellSet = new sudokuCellSet( possibleCellPositions );
+			var cellSet = new sudokuCellSet( unitCellPositions );
+			var possibleCellPositions = cellSet.possibleSet;
 			for (var groupIndex=0; groupIndex < cellSet.groups.length; groupIndex++) {
 				//debugFramework.showMessage("checkForGroups by unit index " + groupIndex, "append");
 				var group = cellSet.groups[groupIndex];
@@ -812,7 +890,7 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 				if ( groupsAction === "exclude" ) {
 					valueState = "excluded";
 				} else {
-					valueState = "ignored";
+					valueState = "impossible";
 				}
 
 				//var oldDebugState = debugFramework.enableDebug();

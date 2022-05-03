@@ -40,7 +40,9 @@ Sudoku Aid v0.2 by Nigel Whitley (c) Copyright 2005-2014
 	sudokuStatic.valueSeparatorLength = sudokuStatic.valueSeparator.length;
 
 	sudokuGlobal = {};
+	sudokuGlobal.blocks = createArray(sudokuStatic.lastBlockRow, sudokuStatic.lastBlockColumn);
 	sudokuGlobal.currentValues = new Array(sudokuStatic.maxValue);
 	sudokuGlobal.possibleValues = new Array();
 	sudokuGlobal.undoList = new Array();
 	sudokuGlobal.undoCount = 0;
+    

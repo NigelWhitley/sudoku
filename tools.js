@@ -113,25 +113,6 @@ function runWhenReady(readyfn, asyncElement){
 
 }
 
-function loadJsFile(filename){
-	if (extFilesAdded.indexOf("["+filename+"]") == -1) {
-		var jsElement=document.createElement('script');
-		jsElement.setAttribute("type","text/javascript");
-		jsElement.setAttribute("src", filename);
-		if (typeof jsElement !== "undefined") {
-			extFilesCount++;
-			runWhenReady(function(){extFilesCount--;}
-				, jsElement);
-			if (typeof debug_text !== "undefined") {
-				debug_text.nodeValue=toString(extFilesCount);
-			}
-			document.getElementsByTagName("head")[0].appendChild(jsElement);
-		}
-		extFilesAdded+="["+filename+"]"; //List of files added in the form "[filename1],[filename2],etc"
-	}
-}
-
-
 function loadAndRun(readyCallback) {
 	var firstScriptElement = document.getElementsByTagName('script')[0]; 
 	var scriptElement = document.createElement('script');
@@ -175,6 +156,28 @@ function loadCssFile(filename){
 		}
 		extFilesAdded+="["+filename+"]"; //List of files added in the form "[filename1],[filename2],etc"
 	}
+}
+
+function loadJsFile(url, id, callback){
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
 }
 
 // * Example usage *
@@ -327,4 +330,21 @@ function getNextChildIndex(parent_node, start_index, node_name) {
 	//}
 	return next_child_index;
 
+}
+
+
+function saveTextFile(filename,text){
+    // Set up the link
+    var link = document.createElement("a");
+    link.setAttribute("target","_blank");
+    if(Blob !== undefined) {
+        var blob = new Blob([text], {type: "text/plain"});
+        link.setAttribute("href", URL.createObjectURL(blob));
+    } else {
+        link.setAttribute("href","data:text/plain," + encodeURIComponent(text));
+    }
+    link.setAttribute("download",filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
